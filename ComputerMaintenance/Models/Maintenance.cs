@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace ComputerMaintenance.Models
 {
-    public class Computer
+    public class Maintenance
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }
-        public List<ItemComputer> ItemComputers { get; set; }
+        public string ActiActivity { get; set; }
+        public List<MaintenanceItem> MaintenanceItems { get; set; }
     }
 }
