@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ComputerMaintenance.Context;
 using ComputerMaintenance.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace ComputerMaintenance.Context
+namespace ComputerMaintenance.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
