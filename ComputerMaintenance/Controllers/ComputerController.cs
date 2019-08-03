@@ -42,16 +42,6 @@ namespace ComputerMaintenance.Controllers
             return computer;
         }
 
-        // POST: api/Computer
-        [HttpPost]
-        public async Task<ActionResult<Computer>> CreateComputer(Computer computer)
-        {
-            _context.Computers.Add(computer);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetComputer), new { id = computer.Id }, computer);
-        }
-
         // PUT: api/Computer/id
         [HttpPut("{id}")]
         public async Task<IActionResult> PutComputer(Guid id, Computer computer)
@@ -62,17 +52,41 @@ namespace ComputerMaintenance.Controllers
             }
 
             _context.Entry(computer).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ComputerExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
             return NoContent();
         }
 
+        // POST: api/Computer
+        [HttpPost]
+        public async Task<ActionResult<Computer>> PostComputer(Computer computer)
+        {
+            _context.Computers.Add(computer);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetComputer", new { id = computer.Id }, computer);
+        }        
+
         // DELETE: api/Computer/id
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteComputer(Guid id)
+        public async Task<ActionResult<Computer>> DeleteComputer(Guid id)
         {
             var computer = await _context.Computers.FindAsync(id);
-
             if (computer == null)
             {
                 return NotFound();
@@ -81,7 +95,12 @@ namespace ComputerMaintenance.Controllers
             _context.Computers.Remove(computer);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return computer;
+        }
+
+        private bool ComputerExists(Guid id)
+        {
+            return _context.Computers.Any(e => e.Id == id);
         }
     }
 }
