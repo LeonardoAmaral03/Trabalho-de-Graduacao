@@ -11,7 +11,9 @@ namespace ComputerMaintenance.Models
         public Guid Id { get; set; }
         public int Period { get; set; }
         public Status Status { get; set; }
+        public Guid ItemId { get; set; }
         public Item Item { get; set; }
+        public Guid MaintenanceId { get; set; }
         public Maintenance Maintenance { get; set; }
     }
 }

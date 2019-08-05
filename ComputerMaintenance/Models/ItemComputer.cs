@@ -9,7 +9,9 @@ namespace ComputerMaintenance.Models
     {
         public Guid Id { get; set; }
         public DateTime AcquisitionDate { get; set; }
+        public Guid ComputerId { get; set; }
         public Computer Computer { get; set; }
+        public Guid ItemId { get; set; }
         public Item Item { get; set; }
     }
 }

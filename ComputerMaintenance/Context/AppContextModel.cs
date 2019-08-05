@@ -18,5 +18,36 @@ namespace ComputerMaintenance.Context
         public AppContextModel(DbContextOptions<AppContextModel> options) : base(options)
         {
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            /* ItemComputer */
+            modelBuilder.Entity<ItemComputer>()
+                .HasKey(pt => new { pt.ComputerId, pt.ItemId });
+
+            modelBuilder.Entity<ItemComputer>()
+                .HasOne(pt => pt.Computer)
+                .WithMany(p => p.ItemComputers)
+                .HasForeignKey(pt => pt.ComputerId);
+
+            modelBuilder.Entity<ItemComputer>()
+                .HasOne(pt => pt.Item)
+                .WithMany(t => t.ItemComputers)
+                .HasForeignKey(pt => pt.ItemId);
+
+            /* MaintenanceItem */
+            modelBuilder.Entity<MaintenanceItem>()
+                .HasKey(pt => new { pt.ItemId, pt.MaintenanceId });
+
+            modelBuilder.Entity<MaintenanceItem>()
+                .HasOne(pt => pt.Item)
+                .WithMany(p => p.MaintenanceItems)
+                .HasForeignKey(pt => pt.ItemId);
+
+            modelBuilder.Entity<MaintenanceItem>()
+                .HasOne(pt => pt.Maintenance)
+                .WithMany(t => t.MaintenanceItems)
+                .HasForeignKey(pt => pt.MaintenanceId);
+        }
     }
 }
