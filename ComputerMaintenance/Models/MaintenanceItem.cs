@@ -8,7 +8,6 @@ namespace ComputerMaintenance.Models
 {
     public class MaintenanceItem
     {
-        public Guid Id { get; set; }
         public int Period { get; set; }
         public Status Status { get; set; }
         public Guid ItemId { get; set; }
