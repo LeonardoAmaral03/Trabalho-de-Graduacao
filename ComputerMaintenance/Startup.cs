@@ -30,6 +30,11 @@ namespace ComputerMaintenance
             services.AddDbContext<AppContextModel>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ComputerMaintenance")));
 
+            // Make sure you call this previous to AddMvc
+            services.AddCors(options => options.AddPolicy("ApiCorsPolicy", builder =>
+            {
+                builder.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
+            }));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -47,6 +52,10 @@ namespace ComputerMaintenance
             }
 
             app.UseHttpsRedirection();
+
+            // Make sure you call this before calling app.UseMvc()
+            app.UseCors("ApiCorsPolicy");
+
             app.UseMvc();
         }
     }
