@@ -28,6 +28,23 @@ namespace ComputerMaintenance.Controllers
             return await _context.Items.ToListAsync();
         }
 
+        // GET: api/Item/MaintenanceItem/id
+        [HttpGet("MaintenanceItem/{id}")]
+        public async Task<ActionResult<IEnumerable<MaintenanceItem>>> GetIMaintenanceItems(Guid id)
+        {
+            List<MaintenanceItem> maintenanceItems = await _context.MaintenanceItems
+                                                        .Include(m => m.Maintenance)
+                                                        .Include(i => i.Item)
+                                                        .Where(mi => mi.ItemId == id).ToListAsync();
+
+            if (maintenanceItems == null)
+            {
+                return NotFound();
+            }
+
+            return maintenanceItems;
+        }
+
         // GET: api/Item/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Item>> GetItem(Guid id)
