@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ComputerMaintenance.Context;
 using ComputerMaintenance.Models;
+using ComputerMaintenance.Models.ViewModels;
 
 namespace ComputerMaintenance.Controllers
 {
@@ -21,26 +22,74 @@ namespace ComputerMaintenance.Controllers
             _context = context;
         }
 
-        // GET: api/MaintenanceItem
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<MaintenanceItem>>> GetMaintenanceItems()
-        {
-            return await _context.MaintenanceItems.ToListAsync();
-        }
+        //// GET: api/Maintenances
+        //[HttpGet("Maintenances")]
+        //public async Task<ActionResult<List<Maintenance>>> GetMaintenances()
+        //{
+        //    return await _context.Maintenances.ToListAsync();
+        //}
 
-        // GET: api/MaintenanceItem/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<MaintenanceItem>> GetMaintenanceItem(Guid id)
-        {
-            var maintenanceItem = await _context.MaintenanceItems.FindAsync(id);
+        //// GET: api/Item/5
+        //[HttpGet("Item/{itemId}")]
+        //public async Task<ActionResult<Item>> GetItem(Guid itemId)
+        //{
+        //    var item = await _context.Items.FindAsync(itemId);
 
-            if (maintenanceItem == null)
+        //    if (item == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    return item;
+        //}
+
+
+        // GET: api/Item/MaintenanceItems/itemId
+        [HttpGet("{itemId}")]
+        public async Task<ActionResult<MaintenanceItemViewModel>> GetIMaintenanceItems(Guid itemId)
+        {
+            List<MaintenanceItem> maintenanceItems = await _context.MaintenanceItems
+                                                        .Include(m => m.Maintenance)
+                                                        .Include(i => i.Item)
+                                                        .Where(mi => mi.ItemId == itemId).ToListAsync();
+
+            if (maintenanceItems == null)
             {
                 return NotFound();
             }
 
-            return maintenanceItem;
+            var item = await _context.Items.FindAsync(itemId);
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            var maintenances = await _context.Maintenances.ToListAsync();
+
+            MaintenanceItemViewModel maintenanceItemViewModel = new MaintenanceItemViewModel()
+            {
+                Item = item,
+                Maintenances = maintenances,
+                MaintenanceItems = maintenanceItems
+            };
+
+            return maintenanceItemViewModel;
         }
+
+        //// GET: api/MaintenanceItem/5
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<MaintenanceItem>> GetMaintenanceItem(Guid id)
+        //{
+        //    var maintenanceItem = await _context.MaintenanceItems.FindAsync(id);
+
+        //    if (maintenanceItem == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    return maintenanceItem;
+        //}
 
         // PUT: api/MaintenanceItem/5
         [HttpPut("{id}")]
@@ -97,10 +146,10 @@ namespace ComputerMaintenance.Controllers
         }
 
         // DELETE: api/MaintenanceItem/5
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<MaintenanceItem>> DeleteMaintenanceItem(Guid id)
+        [HttpDelete("{itemId}/{maintenanceId}")]
+        public async Task<ActionResult<MaintenanceItem>> DeleteMaintenanceItem(Guid itemId, Guid maintenanceId)
         {
-            var maintenanceItem = await _context.MaintenanceItems.FindAsync(id);
+            var maintenanceItem = await _context.MaintenanceItems.FindAsync(itemId, maintenanceId);
             if (maintenanceItem == null)
             {
                 return NotFound();
