@@ -142,7 +142,7 @@ namespace ComputerMaintenance.Controllers
                 }
             }
 
-            return CreatedAtAction("GetMaintenanceItem", new { id = maintenanceItem.ItemId }, maintenanceItem);
+            return CreatedAtAction("GetIMaintenanceItems", new { itemId = maintenanceItem.ItemId }, maintenanceItem);
         }
 
         // DELETE: api/MaintenanceItem/5
