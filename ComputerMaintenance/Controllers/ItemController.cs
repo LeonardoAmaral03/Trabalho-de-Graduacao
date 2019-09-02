@@ -115,6 +115,22 @@ namespace ComputerMaintenance.Controllers
             return item;
         }
 
+        // DELETE: api/MaintenanceItem/5/6
+        [HttpDelete("{itemId}/{maintenanceId}")]
+        public async Task<ActionResult<MaintenanceItem>> DeleteMaintenanceItem(Guid itemId, Guid maintenanceId)
+        {
+            var maintenanceItem = await _context.MaintenanceItems.FindAsync(itemId, maintenanceId);
+            if (maintenanceItem == null)
+            {
+                return NotFound();
+            }
+
+            _context.MaintenanceItems.Remove(maintenanceItem);
+            await _context.SaveChangesAsync();
+
+            return maintenanceItem;
+        }
+
         private bool ItemExists(Guid id)
         {
             return _context.Items.Any(e => e.Id == id);

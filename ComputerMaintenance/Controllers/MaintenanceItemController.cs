@@ -145,22 +145,6 @@ namespace ComputerMaintenance.Controllers
             return CreatedAtAction("GetIMaintenanceItems", new { itemId = maintenanceItem.ItemId }, maintenanceItem);
         }
 
-        // DELETE: api/MaintenanceItem/5
-        [HttpDelete("{itemId}/{maintenanceId}")]
-        public async Task<ActionResult<MaintenanceItem>> DeleteMaintenanceItem(Guid itemId, Guid maintenanceId)
-        {
-            var maintenanceItem = await _context.MaintenanceItems.FindAsync(itemId, maintenanceId);
-            if (maintenanceItem == null)
-            {
-                return NotFound();
-            }
-
-            _context.MaintenanceItems.Remove(maintenanceItem);
-            await _context.SaveChangesAsync();
-
-            return maintenanceItem;
-        }
-
         private bool MaintenanceItemExists(Guid id)
         {
             return _context.MaintenanceItems.Any(e => e.ItemId == id);
