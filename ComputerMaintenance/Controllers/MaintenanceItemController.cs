@@ -65,7 +65,9 @@ namespace ComputerMaintenance.Controllers
                 return NotFound();
             }
 
-            var maintenances = await _context.Maintenances.ToListAsync();
+            var maintenances = await _context.Maintenances.Where(m => 
+                                        !_context.MaintenanceItems.Any(mi => mi.ItemId == itemId && mi.MaintenanceId == m.Id)
+                                     ).ToListAsync();
 
             MaintenanceItemViewModel maintenanceItemViewModel = new MaintenanceItemViewModel()
             {
