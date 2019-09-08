@@ -46,7 +46,7 @@ namespace ComputerMaintenance.Controllers
 
         // GET: api/Item/MaintenanceItems/itemId
         [HttpGet("{itemId}")]
-        public async Task<ActionResult<MaintenanceItemViewModel>> GetIMaintenanceItems(Guid itemId)
+        public async Task<ActionResult<MaintenanceItemViewModel>> GetMaintenanceItems(Guid itemId)
         {
             List<MaintenanceItem> maintenanceItems = await _context.MaintenanceItems
                                                         .Include(m => m.Maintenance)
@@ -77,6 +77,39 @@ namespace ComputerMaintenance.Controllers
             };
 
             return maintenanceItemViewModel;
+        }
+
+        // GET: api/Item/MaintenanceItems/itemId
+        [HttpGet("{itemId}/{maintenanceId}")]
+        public async Task<ActionResult<MaintenanceItemEditViewModel>> GetMaintenanceItem(Guid itemId, Guid maintenanceId)
+        {
+            MaintenanceItem maintenanceItem = await _context.MaintenanceItems
+                                                        .Include(m => m.Maintenance)
+                                                        .Include(i => i.Item)
+                                                        .Where(mi => mi.ItemId == itemId && mi.MaintenanceId == maintenanceId)
+                                                        .FirstOrDefaultAsync();
+
+            if (maintenanceItem == null)
+            {
+                return NotFound();
+            }
+
+            //var item = await _context.Items.FindAsync(itemId);
+
+            //if (item == null)
+            //{
+            //    return NotFound();
+            //}
+
+            var maintenance = await _context.Maintenances.FindAsync(maintenanceId);
+
+            MaintenanceItemEditViewModel maintenanceItemEditViewModel = new MaintenanceItemEditViewModel()
+            {
+                Maintenance = maintenance,
+                MaintenanceItem = maintenanceItem
+            };
+
+            return maintenanceItemEditViewModel;
         }
 
         //// GET: api/MaintenanceItem/5
