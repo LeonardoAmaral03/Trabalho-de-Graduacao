@@ -30,7 +30,7 @@ namespace ComputerMaintenance.Controllers
 
         // GET: api/Item/MaintenanceItem/id
         [HttpGet("MaintenanceItem/{id}")]
-        public async Task<ActionResult<IEnumerable<MaintenanceItem>>> GetIMaintenanceItems(Guid id)
+        public async Task<ActionResult<IEnumerable<MaintenanceItem>>> GetMaintenanceItems(Guid id)
         {
             List<MaintenanceItem> maintenanceItems = await _context.MaintenanceItems
                                                         .Include(m => m.Maintenance)

@@ -177,7 +177,7 @@ namespace ComputerMaintenance.Controllers
                 }
             }
 
-            return CreatedAtAction("GetIMaintenanceItems", new { itemId = maintenanceItem.ItemId }, maintenanceItem);
+            return CreatedAtAction("GetMaintenanceItems", new { itemId = maintenanceItem.ItemId }, maintenanceItem);
         }
 
         private bool MaintenanceItemExists(Guid id)

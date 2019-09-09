@@ -9,7 +9,7 @@ namespace ComputerMaintenance.Models
     public class MaintenanceItem
     {
         public int Period { get; set; }
-        public Status Status { get; set; }
+        //public Status Status { get; set; }
         public Guid ItemId { get; set; }
         public Item Item { get; set; }
         public Guid MaintenanceId { get; set; }
