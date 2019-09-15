@@ -28,6 +28,23 @@ namespace ComputerMaintenance.Controllers
             return await _context.Computers.ToListAsync();
         }
 
+        // GET: api/Item/ItemComputer/id
+        [HttpGet("ItemComputer/{id}")]
+        public async Task<ActionResult<IEnumerable<ItemComputer>>> GetItemComputers(Guid id)
+        {
+            List<ItemComputer> itemComputers = await _context.ItemComputers
+                                                        .Include(i => i.Item)
+                                                        .Include(c => c.Computer)
+                                                        .Where(ic => ic.ComputerId == id).ToListAsync();
+
+            if (itemComputers == null)
+            {
+                return NotFound();
+            }
+
+            return itemComputers;
+        }
+
         // GET: api/Computer/id
         [HttpGet("{id}")]
         public async Task<ActionResult<Computer>> GetComputer(Guid id)
@@ -96,6 +113,22 @@ namespace ComputerMaintenance.Controllers
             await _context.SaveChangesAsync();
 
             return computer;
+        }
+
+        // DELETE: api/MaintenanceItem/5/6
+        [HttpDelete("{computerId}/{itemId}")]
+        public async Task<ActionResult<ItemComputer>> DeleteItemComputer(Guid computerId, Guid itemId)
+        {
+            var itemComputer = await _context.ItemComputers.FindAsync(computerId, itemId);
+            if (itemComputer == null)
+            {
+                return NotFound();
+            }
+
+            _context.ItemComputers.Remove(itemComputer);
+            await _context.SaveChangesAsync();
+
+            return itemComputer;
         }
 
         private bool ComputerExists(Guid id)

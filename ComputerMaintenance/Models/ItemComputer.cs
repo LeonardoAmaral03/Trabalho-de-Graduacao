@@ -7,7 +7,7 @@ namespace ComputerMaintenance.Models
 {
     public class ItemComputer
     {
-        public DateTime AcquisitionDate { get; set; }
+        public DateTime RegistrationDate { get; set; }
         public Guid ComputerId { get; set; }
         public Computer Computer { get; set; }
         public Guid ItemId { get; set; }

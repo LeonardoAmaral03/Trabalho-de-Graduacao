@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ComputerMaintenance.Context;
 using ComputerMaintenance.Models;
+using ComputerMaintenance.Models.ViewModels;
 
 namespace ComputerMaintenance.Controllers
 {
@@ -21,61 +22,97 @@ namespace ComputerMaintenance.Controllers
             _context = context;
         }
 
-        // GET: api/ItemComputer
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ItemComputer>>> GetItemComputers()
-        {
-            return await _context.ItemComputers.ToListAsync();
-        }
+        //// GET: api/ItemComputer
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<ItemComputer>>> GetItemComputers()
+        //{
+        //    return await _context.ItemComputers.ToListAsync();
+        //}
 
-        // GET: api/ItemComputer/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ItemComputer>> GetItemComputer(Guid id)
-        {
-            var itemComputer = await _context.ItemComputers.FindAsync(id);
+        //// GET: api/ItemComputer/5
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<ItemComputer>> GetItemComputer(Guid id)
+        //{
+        //    var itemComputer = await _context.ItemComputers.FindAsync(id);
 
-            if (itemComputer == null)
+        //    if (itemComputer == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    return itemComputer;
+        //}
+
+        // GET: api/Item/MaintenanceItems/itemId
+        [HttpGet("{computerId}")]
+        public async Task<ActionResult<ItemComputerViewModel>> GetItemComputers(Guid computerId)
+        {
+            List<ItemComputer> itemComputers = await _context.ItemComputers
+                                                        .Include(i => i.Item)
+                                                        .Include(c => c.Computer)
+                                                        .Where(ic => ic.ComputerId == computerId).ToListAsync();
+
+            if (itemComputers == null)
             {
                 return NotFound();
             }
 
-            return itemComputer;
+            var computer = await _context.Computers.FindAsync(computerId);
+
+            if (computer == null)
+            {
+                return NotFound();
+            }
+
+            var items = await _context.Items.Where(i =>
+                                        !_context.ItemComputers.Any(ic => ic.ComputerId == computerId && ic.ItemId == i.Id)
+                                     ).ToListAsync();
+
+            ItemComputerViewModel itemComputerViewModel = new ItemComputerViewModel()
+            {
+                Computer = computer,
+                Items = items,
+                ItemComputers = itemComputers
+            };
+
+            return itemComputerViewModel;
         }
 
-        // PUT: api/ItemComputer/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutItemComputer(Guid id, ItemComputer itemComputer)
-        {
-            if (id != itemComputer.ComputerId)
-            {
-                return BadRequest();
-            }
+        //// PUT: api/ItemComputer/5
+        //[HttpPut("{id}")]
+        //public async Task<IActionResult> PutItemComputer(Guid id, ItemComputer itemComputer)
+        //{
+        //    if (id != itemComputer.ComputerId)
+        //    {
+        //        return BadRequest();
+        //    }
 
-            _context.Entry(itemComputer).State = EntityState.Modified;
+        //    _context.Entry(itemComputer).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ItemComputerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!ItemComputerExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
 
-            return NoContent();
-        }
+        //    return NoContent();
+        //}
 
         // POST: api/ItemComputer
         [HttpPost]
         public async Task<ActionResult<ItemComputer>> PostItemComputer(ItemComputer itemComputer)
         {
+            itemComputer.RegistrationDate = DateTime.Now;
             _context.ItemComputers.Add(itemComputer);
             try
             {
@@ -93,24 +130,24 @@ namespace ComputerMaintenance.Controllers
                 }
             }
 
-            return CreatedAtAction("GetItemComputer", new { id = itemComputer.ComputerId }, itemComputer);
+            return CreatedAtAction("GetItemComputers", new { computerId = itemComputer.ComputerId }, itemComputer);
         }
 
-        // DELETE: api/ItemComputer/5
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<ItemComputer>> DeleteItemComputer(Guid id)
-        {
-            var itemComputer = await _context.ItemComputers.FindAsync(id);
-            if (itemComputer == null)
-            {
-                return NotFound();
-            }
+        //// DELETE: api/ItemComputer/5
+        //[HttpDelete("{id}")]
+        //public async Task<ActionResult<ItemComputer>> DeleteItemComputer(Guid id)
+        //{
+        //    var itemComputer = await _context.ItemComputers.FindAsync(id);
+        //    if (itemComputer == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            _context.ItemComputers.Remove(itemComputer);
-            await _context.SaveChangesAsync();
+        //    _context.ItemComputers.Remove(itemComputer);
+        //    await _context.SaveChangesAsync();
 
-            return itemComputer;
-        }
+        //    return itemComputer;
+        //}
 
         private bool ItemComputerExists(Guid id)
         {
