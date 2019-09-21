@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using ComputerMaintenance.Context;
 using ComputerMaintenance.Models;
 using ComputerMaintenance.Models.ViewModels;
+using static ComputerMaintenance.Models.Enum.EnumStatus;
 
 namespace ComputerMaintenance.Controllers
 {
@@ -112,8 +113,60 @@ namespace ComputerMaintenance.Controllers
         [HttpPost]
         public async Task<ActionResult<ItemComputer>> PostItemComputer(ItemComputer itemComputer)
         {
-            itemComputer.RegistrationDate = DateTime.Now;
+            var registrationDate = DateTime.Now;
+            var dateYearsPeriod = registrationDate.AddYears(4).Year;
+            var idScheduleItemComputer = Guid.NewGuid();
+
+            ScheduleItemComputer scheduleItemComputer = new ScheduleItemComputer();
+            ScheduleMaintenanceItem scheduleMaintenanceItem;
+            List<ScheduleMaintenanceItem> scheduleMaintenanceItems = new List<ScheduleMaintenanceItem>();
+            Schedule schedule;
+            List<Schedule> schedules = new List<Schedule>();
+
+            var listMaintenanceItems = await _context.MaintenanceItems.Where(mi => mi.ItemId == itemComputer.ItemId).ToListAsync();
+
+            itemComputer.RegistrationDate = registrationDate;
+
+            scheduleItemComputer.Id = idScheduleItemComputer;
+            scheduleItemComputer.ComputerId = itemComputer.ComputerId;
+            scheduleItemComputer.ItemId = itemComputer.ItemId;
+
+            foreach (var maintenanceItem in listMaintenanceItems) {
+
+                scheduleMaintenanceItem = new ScheduleMaintenanceItem();
+
+                scheduleMaintenanceItem.Id = Guid.NewGuid();
+                scheduleMaintenanceItem.ScheduleItemComputerId = scheduleItemComputer.Id;
+                scheduleMaintenanceItem.MaintenanceId = maintenanceItem.MaintenanceId;
+
+                scheduleMaintenanceItems.Add(scheduleMaintenanceItem);
+            }
+
+            foreach (var scheduleMI in scheduleMaintenanceItems)
+            {
+                var dateAddMonth = registrationDate;
+
+                while (dateAddMonth.Year < dateYearsPeriod)
+                {
+                    schedule = new Schedule();
+
+                    schedule.Id = Guid.NewGuid();
+                    schedule.ScheduleMaintenanceItemId = scheduleMI.Id;
+                    schedule.Status = Status.Pending;
+
+                    dateAddMonth = dateAddMonth.AddMonths(listMaintenanceItems.Find(mi => mi.MaintenanceId == scheduleMI.MaintenanceId).Period);
+
+                    schedule.MaintenanceDate = dateAddMonth;
+
+                    schedules.Add(schedule);
+                }
+            }
+
             _context.ItemComputers.Add(itemComputer);
+            _context.ScheduleItemComputers.Add(scheduleItemComputer);
+            _context.ScheduleMaintenanceItems.AddRange(scheduleMaintenanceItems);
+            _context.Schedules.AddRange(schedules);
+
             try
             {
                 await _context.SaveChangesAsync();

@@ -4,14 +4,16 @@ using ComputerMaintenance.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ComputerMaintenance.Migrations
 {
     [DbContext(typeof(AppContextModel))]
-    partial class AppContextModelModelSnapshot : ModelSnapshot
+    [Migration("20190921200132_CriadoSchedules")]
+    partial class CriadoSchedules
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -56,8 +58,6 @@ namespace ComputerMaintenance.Migrations
                     b.Property<Guid>("ComputerId");
 
                     b.Property<Guid>("ItemId");
-
-                    b.Property<DateTime>("RegistrationDate");
 
                     b.HasKey("ComputerId", "ItemId");
 
@@ -121,6 +121,8 @@ namespace ComputerMaintenance.Migrations
                     b.Property<Guid>("ComputerId");
 
                     b.Property<Guid>("ItemId");
+
+                    b.Property<DateTime>("RegistrationDate");
 
                     b.HasKey("Id");
 

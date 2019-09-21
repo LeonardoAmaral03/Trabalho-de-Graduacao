@@ -15,6 +15,10 @@ namespace ComputerMaintenance.Context
         public DbSet<ItemComputer> ItemComputers { get; set; }
         public DbSet<MaintenanceItem> MaintenanceItems { get; set; }
 
+        public DbSet<ScheduleItemComputer> ScheduleItemComputers { get; set; }
+        public DbSet<ScheduleMaintenanceItem> ScheduleMaintenanceItems { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
+
         public AppContextModel(DbContextOptions<AppContextModel> options) : base(options)
         {
         }
