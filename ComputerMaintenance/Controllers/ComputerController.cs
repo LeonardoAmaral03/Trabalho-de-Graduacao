@@ -59,6 +59,24 @@ namespace ComputerMaintenance.Controllers
             return computer;
         }
 
+        // GET: api/Item/ComputerSchedule/id
+        [HttpGet("ComputerSchedule/{id}")]
+        public async Task<ActionResult<IEnumerable<ItemComputer>>> GetComputerSchedule(Guid id)
+        {
+            //List<ItemComputer> itemComputers = await _context.ItemComputers
+            //                                            .Include(i => i.Item)
+            //                                            .Include(c => c.Computer)
+            //                                            .Where(ic => ic.ComputerId == id).ToListAsync();
+
+            //if (itemComputers == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //return itemComputers;
+            return null;
+        }
+
         // PUT: api/Computer/id
         [HttpPut("{id}")]
         public async Task<IActionResult> PutComputer(Guid id, Computer computer)
