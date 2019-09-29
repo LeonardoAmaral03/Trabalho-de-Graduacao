@@ -9,7 +9,9 @@ namespace ComputerMaintenance.Models.ViewModels
     public class ComputerScheduleViewModel
     {
         public DateTime MaintenanceDate { get; set; }
-        public string ItemMaintenanceName { get; set; }
+        public string MaintenanceName { get; set; }
+        //public string ItemMaintenanceActivity { get; set; }
+        public string ItemName { get; set; }
         public Status Status { get; set; }
     }
 }
