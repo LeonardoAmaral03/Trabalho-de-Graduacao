@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ComputerMaintenance.Context;
+using ComputerMaintenance.Models;
 using ComputerMaintenance.Models.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +23,6 @@ namespace ComputerMaintenance.Controllers
             _context = context;
         }
 
-        // GET: api/Computer
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ListSchedulesViewModel>>> GetListSchedules()
         {
@@ -38,8 +38,11 @@ namespace ComputerMaintenance.Controllers
                                                                 orderby s.Status, s.MaintenanceDate
                                                                 select new ListSchedulesViewModel
                                                                 {
+                                                                    ComputerId = c.Id,
                                                                     ComputerName = c.Name,
+                                                                    ItemId = i.Id,
                                                                     ItemName = i.Name,
+                                                                    MaintenanceId = m.Id,
                                                                     MaintenanceName = m.Name,
                                                                     MaintenanceDate = s.MaintenanceDate,
                                                                     Status = s.Status
@@ -51,6 +54,47 @@ namespace ComputerMaintenance.Controllers
             }
 
             return listSchedules;
+        }
+
+        [HttpPut()]
+        public async Task<IActionResult> StatusAccomplished(UpdateStatus updateStatus)
+        {
+            Schedule schedule = await (from sic in _context.ScheduleItemComputers
+                                       join smi in _context.ScheduleMaintenanceItems on sic.Id equals smi.ScheduleItemComputerId
+                                       join s in _context.Schedules on smi.Id equals s.ScheduleMaintenanceItemId
+                                       where sic.ComputerId == updateStatus.ComputerId 
+                                          && sic.ItemId == updateStatus.ItemId 
+                                          && smi.MaintenanceId == updateStatus.MaintenanceId 
+                                          && s.MaintenanceDate == updateStatus.MaintenanceDate
+                                       select new Schedule
+                                       {
+                                           Id = s.Id,
+                                           ScheduleMaintenanceItemId = s.ScheduleMaintenanceItemId,
+                                           MaintenanceDate = s.MaintenanceDate,
+                                           Status = s.Status,
+                                           ScheduleMaintenanceItem = smi
+                                           
+                                       }).FirstOrDefaultAsync();
+
+            if (schedule == null)
+            {
+                return NotFound();
+            }
+
+            schedule.Status = Status.Accomplished;
+
+            _context.Entry(schedule).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw;
+            }
+
+            return NoContent();
         }
     }
 }
