@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ComputerMaintenance.Context;
+using ComputerMaintenance.Services;
+using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -31,6 +33,12 @@ namespace ComputerMaintenance
             services.AddDbContext<AppContextModel>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ComputerMaintenance")));
 
+            // Add Hangfire services
+            services.AddHangfire(s => s.UseSqlServerStorage(Configuration.GetConnectionString("HangFire")));
+            services.AddHangfireServer();
+
+            services.AddScoped<StatusSchedule>();
+
             // Make sure you call this previous to AddMvc
             services.AddCors(options => options.AddPolicy("ApiCorsPolicy", builder =>
             {
@@ -57,6 +65,12 @@ namespace ComputerMaintenance
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            //Hangfire
+            app.UseHangfireServer();
+            app.UseHangfireDashboard("/hangfire");
+
+            RecurringJob.AddOrUpdate<StatusSchedule>(checkStatus => checkStatus.CheckStatus(), Cron.Daily, TimeZoneInfo.Local);
 
             app.UseHttpsRedirection();
 
