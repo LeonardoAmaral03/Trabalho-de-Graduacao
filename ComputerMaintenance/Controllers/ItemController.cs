@@ -120,12 +120,50 @@ namespace ComputerMaintenance.Controllers
         public async Task<ActionResult<MaintenanceItem>> DeleteMaintenanceItem(Guid itemId, Guid maintenanceId)
         {
             var maintenanceItem = await _context.MaintenanceItems.FindAsync(itemId, maintenanceId);
+
             if (maintenanceItem == null)
             {
                 return NotFound();
             }
 
             _context.MaintenanceItems.Remove(maintenanceItem);
+
+            var scheduleItemComputersId = await (from sic in _context.ScheduleItemComputers
+                                                 where sic.ItemId == itemId
+                                                 select new {
+                                                     sic.Id
+                                                 }).ToListAsync();
+
+            if (scheduleItemComputersId.Count() > 0)
+            {
+                List<ScheduleMaintenanceItem> scheduleMaintenanceItemsList = new List<ScheduleMaintenanceItem>();
+
+                foreach (var sicId in scheduleItemComputersId)
+                {
+                    var smiList = await _context.ScheduleMaintenanceItems.Where(smi => smi.ScheduleItemComputerId == sicId.Id 
+                                                                          && smi.MaintenanceId == maintenanceId).ToListAsync();
+                    scheduleMaintenanceItemsList.AddRange(smiList);
+                }
+
+                if (scheduleMaintenanceItemsList.Count > 0)
+                {
+                    List<Schedule> schedulesList = new List<Schedule>();
+
+                    foreach (var smiObj in scheduleMaintenanceItemsList)
+                    {
+                        var sList = await _context.Schedules.Where(s => s.ScheduleMaintenanceItemId == smiObj.Id).ToListAsync();
+
+                        schedulesList.AddRange(sList);
+                    }
+
+                    if (schedulesList.Count > 0) {
+                        _context.Schedules.RemoveRange(schedulesList);
+                    }
+
+                    _context.ScheduleMaintenanceItems.RemoveRange(scheduleMaintenanceItemsList);
+                }
+            }
+            
             await _context.SaveChangesAsync();
 
             return maintenanceItem;

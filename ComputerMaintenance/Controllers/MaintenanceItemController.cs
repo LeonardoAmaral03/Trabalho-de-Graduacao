@@ -66,7 +66,7 @@ namespace ComputerMaintenance.Controllers
                 return NotFound();
             }
 
-            var maintenances = await _context.Maintenances.Where(m => 
+            var maintenances = await _context.Maintenances.Where(m =>
                                         !_context.MaintenanceItems.Any(mi => mi.ItemId == itemId && mi.MaintenanceId == m.Id)
                                      ).ToListAsync();
 
@@ -138,6 +138,81 @@ namespace ComputerMaintenance.Controllers
 
             _context.Entry(maintenanceItem).State = EntityState.Modified;
 
+            var scheduleItemComputersId = await (from sic in _context.ScheduleItemComputers
+                                                 where sic.ItemId == maintenanceItem.ItemId
+                                                 select new
+                                                 {
+                                                     sic.Id
+                                                 }).ToListAsync();
+
+            if (scheduleItemComputersId.Count() > 0)
+            {
+                List<ScheduleMaintenanceItem> scheduleMaintenanceItemsList = new List<ScheduleMaintenanceItem>();
+
+                foreach (var sicId in scheduleItemComputersId)
+                {
+                    var smiList = await _context.ScheduleMaintenanceItems.Where(smi => smi.ScheduleItemComputerId == sicId.Id
+                                                                          && smi.MaintenanceId == maintenanceItem.MaintenanceId)
+                                                                         .ToListAsync();
+                    scheduleMaintenanceItemsList.AddRange(smiList);
+                }
+
+                if (scheduleMaintenanceItemsList.Count > 0)
+                {
+                    //List<Schedule> schedulesList = new List<Schedule>();
+
+                    foreach (var smiObj in scheduleMaintenanceItemsList)
+                    {
+                        var schedulesList = await _context.Schedules.Where(s => s.ScheduleMaintenanceItemId == smiObj.Id).ToListAsync();
+
+                        //schedulesList.AddRange(sList);
+
+
+                        if (schedulesList.Count > 0)
+                        {
+                            var scheduleStatusLastDate = DateTime.Now;
+                            var scheduleStatusPending = schedulesList.Where(sl => sl.Status == Status.Pending).ToList();
+
+                            if (schedulesList.Where(sl => sl.Status != Status.Pending).Any())
+                            {
+                                scheduleStatusLastDate = schedulesList.Where(sl => sl.Status != Status.Pending)
+                                                                          .OrderByDescending(sl => sl.MaintenanceDate)
+                                                                          .Select(sl => sl.MaintenanceDate)
+                                                                          .FirstOrDefault();
+                            }
+
+                            var dateYearsPeriod = scheduleStatusLastDate.AddYears(4).Year;
+                            var dateAddMonth = scheduleStatusLastDate;
+
+                            Schedule schedule;
+                            List<Schedule> schedules = new List<Schedule>();
+
+                            while (dateAddMonth.Year < dateYearsPeriod)
+                            {
+                                schedule = new Schedule();
+
+                                schedule.Id = Guid.NewGuid();
+                                schedule.ScheduleMaintenanceItemId = smiObj.Id;
+                                schedule.Status = Status.Pending;
+
+                                dateAddMonth = dateAddMonth.AddMonths(maintenanceItem.Period);
+
+                                schedule.MaintenanceDate = dateAddMonth;
+
+                                schedules.Add(schedule);
+                            }
+
+                            if (scheduleStatusPending.Count > 0)
+                            {
+                                _context.Schedules.RemoveRange(scheduleStatusPending);
+                            }
+
+                            _context.Schedules.AddRange(schedules);
+                        }
+                    }
+                }
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -179,11 +254,11 @@ namespace ComputerMaintenance.Controllers
             //}
 
             List<ScheduleItemComputer> scheduleItemComputerList = await (from sic in _context.ScheduleItemComputers
-                                                    where sic.ItemId == maintenanceItem.ItemId
-                                                    select new ScheduleItemComputer
-                                                    {
-                                                        Id = sic.Id,                                                        
-                                                    }).ToListAsync();
+                                                                         where sic.ItemId == maintenanceItem.ItemId
+                                                                         select new ScheduleItemComputer
+                                                                         {
+                                                                             Id = sic.Id,
+                                                                         }).ToListAsync();
 
             if (scheduleItemComputerList.Count() > 0)
             {

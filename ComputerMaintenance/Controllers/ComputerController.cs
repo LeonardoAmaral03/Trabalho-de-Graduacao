@@ -172,12 +172,47 @@ namespace ComputerMaintenance.Controllers
         public async Task<ActionResult<ItemComputer>> DeleteItemComputer(Guid computerId, Guid itemId)
         {
             var itemComputer = await _context.ItemComputers.FindAsync(computerId, itemId);
+
             if (itemComputer == null)
             {
                 return NotFound();
             }
 
             _context.ItemComputers.Remove(itemComputer);
+
+            ScheduleItemComputer scheduleItemComputer = await _context.ScheduleItemComputers.Where(sic => sic.ComputerId == computerId
+                                                                                             && sic.ItemId == sic.ItemId)
+                                                                                            .FirstOrDefaultAsync();
+
+            if (scheduleItemComputer != null)
+            {
+                List<ScheduleMaintenanceItem> scheduleMaintenanceItemsList = new List<ScheduleMaintenanceItem>();
+                
+                var smiList = await _context.ScheduleMaintenanceItems.Where(smi => smi.ScheduleItemComputerId == scheduleItemComputer.Id
+                                                                            ).ToListAsync();
+                scheduleMaintenanceItemsList.AddRange(smiList);
+
+                if (scheduleMaintenanceItemsList.Count > 0)
+                {
+                    List<Schedule> schedulesList = new List<Schedule>();
+
+                    foreach (var smiObj in scheduleMaintenanceItemsList)
+                    {
+                        var sList = await _context.Schedules.Where(s => s.ScheduleMaintenanceItemId == smiObj.Id).ToListAsync();
+
+                        schedulesList.AddRange(sList);
+                    }
+
+                    if (schedulesList.Count > 0) {
+                        _context.Schedules.RemoveRange(schedulesList);
+                    }
+
+                    _context.ScheduleMaintenanceItems.RemoveRange(scheduleMaintenanceItemsList);
+                }
+
+                _context.ScheduleItemComputers.Remove(scheduleItemComputer);
+            }
+
             await _context.SaveChangesAsync();
 
             return itemComputer;
