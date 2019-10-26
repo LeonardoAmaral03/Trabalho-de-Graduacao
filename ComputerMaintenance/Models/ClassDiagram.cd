@@ -1,0 +1,165 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ComputerMaintenance.Models.Computer">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAgAAAAAAAAAAQAAAAAQAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Computer.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="ItemComputers" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="ComputerMaintenance.Models.Item">
+    <Position X="6.5" Y="0.5" Width="1.5" />
+    <AssociationLine Name="ItemComputers" Type="ComputerMaintenance.Models.ItemComputer" FixedToPoint="true">
+      <Path>
+        <Point X="6.5" Y="1.5" />
+        <Point X="5" Y="1.5" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="MaintenanceItems" Type="ComputerMaintenance.Models.MaintenanceItem" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="8" Y="1.438" />
+        <Point X="9.5" Y="1.438" />
+        <Point X="9.5" Y="2.25" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAACgAAAAAAgAAAAAAAAAAQAAAAAQAAAAAgAAAABAAA=</HashCode>
+      <FileName>Models\Item.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="ItemComputers" />
+      <Property Name="MaintenanceItems" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="ComputerMaintenance.Models.ItemComputer">
+    <Position X="3.5" Y="0.5" Width="1.5" />
+    <AssociationLine Name="Item" Type="ComputerMaintenance.Models.Item" FixedFromPoint="true">
+      <Path>
+        <Point X="5" Y="0.938" />
+        <Point X="6.5" Y="0.938" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAgAAAAAAEAQAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ItemComputer.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Computer" />
+      <Property Name="Item" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="ComputerMaintenance.Models.Maintenance">
+    <Position X="6.25" Y="4" Width="1.5" />
+    <AssociationLine Name="MaintenanceItems" Type="ComputerMaintenance.Models.MaintenanceItem" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="7.75" Y="4.562" />
+        <Point X="9.562" Y="4.562" />
+        <Point X="9.562" Y="3.738" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAACgAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>Models\Maintenance.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="MaintenanceItems" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="ComputerMaintenance.Models.MaintenanceItem">
+    <Position X="8.75" Y="2.25" Width="1.5" />
+    <AssociationLine Name="Item" Type="ComputerMaintenance.Models.Item" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="9.812" Y="2.25" />
+        <Point X="9.812" Y="0.906" />
+        <Point X="8" Y="0.906" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="Maintenance" Type="ComputerMaintenance.Models.Maintenance" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="9.875" Y="3.738" />
+        <Point X="9.875" Y="5.188" />
+        <Point X="7.75" Y="5.188" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAgAAAAAAEAAAAAAgAAAACAAAAAAI=</HashCode>
+      <FileName>Models\MaintenanceItem.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Item" />
+      <Property Name="Maintenance" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="ComputerMaintenance.Models.Schedule">
+    <Position X="5" Y="6" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAEAQAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Schedule.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ScheduleMaintenanceItem" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="ComputerMaintenance.Models.ScheduleItemComputer">
+    <Position X="3.25" Y="2.75" Width="2" />
+    <AssociationLine Name="Item" Type="ComputerMaintenance.Models.Item" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="5.25" Y="3.563" />
+        <Point X="7.188" Y="3.563" />
+        <Point X="7.188" Y="2.373" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="Computer" Type="ComputerMaintenance.Models.Computer">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.9" Y="0.279" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAECAAAAAAAAAAAAgAAAAAAEAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ScheduleItemComputer.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Item" />
+      <Property Name="Computer" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="ComputerMaintenance.Models.ScheduleMaintenanceItem">
+    <Position X="0.5" Y="5" Width="2.25" />
+    <AssociationLine Name="ScheduleItemComputer" Type="ComputerMaintenance.Models.ScheduleItemComputer" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="1.625" Y="5" />
+        <Point X="1.625" Y="3.938" />
+        <Point X="3.25" Y="3.938" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAIAAAAAAIAAAAAgAAAACAAAAAAA=</HashCode>
+      <FileName>Models\ScheduleMaintenanceItem.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Maintenance" />
+      <Property Name="ScheduleItemComputer" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="ComputerMaintenance.Models.Enum.EnumStatus">
+    <Position X="8.5" Y="5.5" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Enum Name="ComputerMaintenance.Models.Enum.EnumStatus.Status">
+        <TypeIdentifier>
+          <NewMemberFileName>Models\Enum\EnumStatus.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Enum\EnumStatus.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
