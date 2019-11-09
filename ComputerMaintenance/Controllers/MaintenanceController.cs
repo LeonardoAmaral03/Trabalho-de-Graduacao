@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ComputerMaintenance.Context;
 using ComputerMaintenance.Models;
+using ComputerMaintenance.Services;
 
 namespace ComputerMaintenance.Controllers
 {
@@ -15,31 +16,34 @@ namespace ComputerMaintenance.Controllers
     public class MaintenanceController : ControllerBase
     {
         private readonly AppContextModel _context;
+        private MaintenanceService maintenanceService;
 
         public MaintenanceController(AppContextModel context)
         {
             _context = context;
+            maintenanceService = new MaintenanceService(_context);
         }
 
         // GET: api/Maintenance
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Maintenance>>> GetMaintenances()
         {
-            return await _context.Maintenances.ToListAsync();
+            var result = await maintenanceService.GetMaintenances();
+            return result;
         }
 
         // GET: api/Maintenance/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Maintenance>> GetMaintenance(Guid id)
         {
-            var maintenance = await _context.Maintenances.FindAsync(id);
+            var result = await maintenanceService.GetMaintenance(id);
 
-            if (maintenance == null)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            return maintenance;
+            return result;
         }
 
         // PUT: api/Maintenance/5
@@ -59,7 +63,7 @@ namespace ComputerMaintenance.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!MaintenanceExists(id))
+                if (!maintenanceService.MaintenanceExists(id))
                 {
                     return NotFound();
                 }
@@ -76,8 +80,7 @@ namespace ComputerMaintenance.Controllers
         [HttpPost]
         public async Task<ActionResult<Maintenance>> PostMaintenance(Maintenance maintenance)
         {
-            _context.Maintenances.Add(maintenance);
-            await _context.SaveChangesAsync();
+            await maintenanceService.PostMaintenance(maintenance);
 
             return CreatedAtAction("GetMaintenance", new { id = maintenance.Id }, maintenance);
         }
@@ -86,21 +89,14 @@ namespace ComputerMaintenance.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Maintenance>> DeleteMaintenance(Guid id)
         {
-            var maintenance = await _context.Maintenances.FindAsync(id);
-            if (maintenance == null)
+            var result = await maintenanceService.DeleteMaintenance(id);
+
+            if (result == null)
             {
                 return NotFound();
             }
 
-            _context.Maintenances.Remove(maintenance);
-            await _context.SaveChangesAsync();
-
-            return maintenance;
-        }
-
-        private bool MaintenanceExists(Guid id)
-        {
-            return _context.Maintenances.Any(e => e.Id == id);
+            return result;
         }
     }
 }

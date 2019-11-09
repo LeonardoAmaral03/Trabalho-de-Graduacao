@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ComputerMaintenance.Context;
 using ComputerMaintenance.Models;
 using ComputerMaintenance.Models.ViewModels;
+using ComputerMaintenance.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,99 +17,62 @@ namespace ComputerMaintenance.Controllers
     public class ComputerController : ControllerBase
     {
         private readonly AppContextModel _context;
+        private ComputerService computerService;
 
         public ComputerController(AppContextModel context)
         {
             _context = context;
+            computerService = new ComputerService(_context);
         }
 
         // GET: api/Computer
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Computer>>> GetComputers()
         {
-            return await _context.Computers.ToListAsync();
+            var result = await computerService.GetComputers();
+            return result;
         }
 
         // GET: api/Item/ItemComputer/id
         [HttpGet("ItemComputer/{id}")]
         public async Task<ActionResult<IEnumerable<ItemComputer>>> GetItemComputers(Guid id)
         {
-            List<ItemComputer> itemComputers = await _context.ItemComputers
-                                                        .Include(i => i.Item)
-                                                        .Include(c => c.Computer)
-                                                        .Where(ic => ic.ComputerId == id).ToListAsync();
-
-            if (itemComputers == null)
+            var result = await computerService.GetItemComputers(id);
+            
+            if (result == null)
             {
                 return NotFound();
             }
 
-            return itemComputers;
+            return result;
         }
 
         // GET: api/Computer/id
         [HttpGet("{id}")]
         public async Task<ActionResult<Computer>> GetComputer(Guid id)
         {
-            var computer = await _context.Computers.FindAsync(id);
+            var result = await computerService.GetComputer(id);
 
-            if(computer == null)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            return computer;
+            return result;
         }
 
         // GET: api/Item/ComputerSchedule/id
         [HttpGet("ComputerSchedule/{id}")]
         public async Task<ActionResult<IEnumerable<ComputerScheduleViewModel>>> GetComputerSchedule(Guid id)
         {
-            List<ScheduleMaintenanceItem> scheduleMaintenanceItemComputers = new List<ScheduleMaintenanceItem>();
-            List<ComputerScheduleViewModel> computerScheduleViewModelsGroup = new List<ComputerScheduleViewModel>();
+            var result = await computerService.GetComputerSchedule(id);
 
-            List<ScheduleItemComputer> scheduleItemComputers = await _context.ScheduleItemComputers
-                                                                    .Where(sic => sic.ComputerId == id)
-                                                                    .ToListAsync();
-
-            if (scheduleItemComputers == null)
+            if (result == null)
             {
                 return NotFound();
-            }
+            }            
 
-            foreach (var scheduleItemComputer in scheduleItemComputers)
-            {
-                List<ScheduleMaintenanceItem> scheduleMaintenanceItems = await _context.ScheduleMaintenanceItems
-                                                                .Include(m => m.Maintenance)
-                                                                .Include(sic => sic.ScheduleItemComputer)
-                                                                    .ThenInclude(i => i.Item)
-                                                                .Where(smi => smi.ScheduleItemComputerId == scheduleItemComputer.Id)
-                                                                .ToListAsync();
-
-                scheduleMaintenanceItemComputers.AddRange(scheduleMaintenanceItems);
-            }
-
-            if (scheduleMaintenanceItemComputers == null)
-            {
-                return NotFound();
-            }
-
-            foreach (var scheduleMaintenanceItemComputer in scheduleMaintenanceItemComputers)
-            {
-                List<ComputerScheduleViewModel> computerScheduleViewModels = await _context.Schedules
-                                                    .Where(s => s.ScheduleMaintenanceItemId == scheduleMaintenanceItemComputer.Id)
-                                                    .Select( schedule => new ComputerScheduleViewModel {
-                                                        MaintenanceDate = schedule.MaintenanceDate,
-                                                        MaintenanceName = scheduleMaintenanceItemComputer.Maintenance.Name,
-                                                        ItemName = scheduleMaintenanceItemComputer.ScheduleItemComputer.Item.Name,
-                                                        Status = schedule.Status
-                                                    })
-                                                    .ToListAsync();
-
-                computerScheduleViewModelsGroup.AddRange(computerScheduleViewModels);
-            }
-
-            return computerScheduleViewModelsGroup;
+            return result;
         }
 
         // PUT: api/Computer/id
@@ -128,7 +92,7 @@ namespace ComputerMaintenance.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ComputerExists(id))
+                if (!computerService.ComputerExists(id))
                 {
                     return NotFound();
                 }
@@ -145,8 +109,7 @@ namespace ComputerMaintenance.Controllers
         [HttpPost]
         public async Task<ActionResult<Computer>> PostComputer(Computer computer)
         {
-            _context.Computers.Add(computer);
-            await _context.SaveChangesAsync();
+            await computerService.PostComputer(computer);
 
             return CreatedAtAction("GetComputer", new { id = computer.Id }, computer);
         }        
@@ -155,72 +118,28 @@ namespace ComputerMaintenance.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Computer>> DeleteComputer(Guid id)
         {
-            var computer = await _context.Computers.FindAsync(id);
-            if (computer == null)
+            var result = await computerService.DeleteComputer(id);
+
+            if (result == null)
             {
                 return NotFound();
-            }
+            }           
 
-            _context.Computers.Remove(computer);
-            await _context.SaveChangesAsync();
-
-            return computer;
+            return result;
         }
 
         // DELETE: api/MaintenanceItem/5/6
         [HttpDelete("{computerId}/{itemId}")]
         public async Task<ActionResult<ItemComputer>> DeleteItemComputer(Guid computerId, Guid itemId)
         {
-            var itemComputer = await _context.ItemComputers.FindAsync(computerId, itemId);
+            var result = await computerService.DeleteItemComputer(computerId, itemId);
 
-            if (itemComputer == null)
+            if (result == null)
             {
                 return NotFound();
-            }
+            }            
 
-            _context.ItemComputers.Remove(itemComputer);
-
-            ScheduleItemComputer scheduleItemComputer = await _context.ScheduleItemComputers.Where(sic => sic.ComputerId == computerId
-                                                                                             && sic.ItemId == sic.ItemId)
-                                                                                            .FirstOrDefaultAsync();
-
-            if (scheduleItemComputer != null)
-            {
-                List<ScheduleMaintenanceItem> scheduleMaintenanceItemsList = new List<ScheduleMaintenanceItem>();
-                
-                var smiList = await _context.ScheduleMaintenanceItems.Where(smi => smi.ScheduleItemComputerId == scheduleItemComputer.Id
-                                                                            ).ToListAsync();
-                scheduleMaintenanceItemsList.AddRange(smiList);
-
-                if (scheduleMaintenanceItemsList.Count > 0)
-                {
-                    List<Schedule> schedulesList = new List<Schedule>();
-
-                    foreach (var smiObj in scheduleMaintenanceItemsList)
-                    {
-                        var sList = await _context.Schedules.Where(s => s.ScheduleMaintenanceItemId == smiObj.Id).ToListAsync();
-
-                        schedulesList.AddRange(sList);
-                    }
-
-                    if (schedulesList.Count > 0) {
-                        _context.Schedules.RemoveRange(schedulesList);
-                    }
-
-                    _context.ScheduleMaintenanceItems.RemoveRange(scheduleMaintenanceItemsList);
-                }
-
-                _context.ScheduleItemComputers.Remove(scheduleItemComputer);
-            }
-
-            await _context.SaveChangesAsync();
-
-            return itemComputer;
-        }
-
-        private bool ComputerExists(Guid id)
-        {
-            return _context.Computers.Any(e => e.Id == id);
+            return result;
         }
     }
 }

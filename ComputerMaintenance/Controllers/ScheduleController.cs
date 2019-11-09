@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ComputerMaintenance.Context;
 using ComputerMaintenance.Models;
 using ComputerMaintenance.Models.ViewModels;
+using ComputerMaintenance.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,73 +18,40 @@ namespace ComputerMaintenance.Controllers
     public class ScheduleController : ControllerBase
     {
         private readonly AppContextModel _context;
+        private ScheduleService scheduleService;
 
         public ScheduleController(AppContextModel context)
         {
             _context = context;
+            scheduleService = new ScheduleService(_context);
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ListSchedulesViewModel>>> GetListSchedules()
         {
-            var today = DateTime.Now.Date;
+            var result = await scheduleService.GetListSchedules();
 
-            List<ListSchedulesViewModel> listSchedules = await (from s in _context.Schedules
-                                                                join smi in _context.ScheduleMaintenanceItems on s.ScheduleMaintenanceItemId equals smi.Id
-                                                                join sic in _context.ScheduleItemComputers on smi.ScheduleItemComputerId equals sic.Id
-                                                                join m in _context.Maintenances on smi.MaintenanceId equals m.Id
-                                                                join i in _context.Items on sic.ItemId equals i.Id
-                                                                join c in _context.Computers on sic.ComputerId equals c.Id
-                                                                where s.MaintenanceDate.Date <= today && s.Status != Status.Accomplished
-                                                                orderby s.Status, s.MaintenanceDate
-                                                                select new ListSchedulesViewModel
-                                                                {
-                                                                    ComputerId = c.Id,
-                                                                    ComputerName = c.Name,
-                                                                    ItemId = i.Id,
-                                                                    ItemName = i.Name,
-                                                                    MaintenanceId = m.Id,
-                                                                    MaintenanceName = m.Name,
-                                                                    MaintenanceDate = s.MaintenanceDate,
-                                                                    Status = s.Status
-                                                                }).ToListAsync();
-
-            if (listSchedules.Count() == 0)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            return listSchedules;
+            return result;
         }
 
         [HttpPut()]
         public async Task<IActionResult> StatusAccomplished(UpdateStatus updateStatus)
         {
-            Schedule schedule = await (from sic in _context.ScheduleItemComputers
-                                       join smi in _context.ScheduleMaintenanceItems on sic.Id equals smi.ScheduleItemComputerId
-                                       join s in _context.Schedules on smi.Id equals s.ScheduleMaintenanceItemId
-                                       where sic.ComputerId == updateStatus.ComputerId 
-                                          && sic.ItemId == updateStatus.ItemId 
-                                          && smi.MaintenanceId == updateStatus.MaintenanceId 
-                                          && s.MaintenanceDate == updateStatus.MaintenanceDate
-                                       select new Schedule
-                                       {
-                                           Id = s.Id,
-                                           ScheduleMaintenanceItemId = s.ScheduleMaintenanceItemId,
-                                           MaintenanceDate = s.MaintenanceDate,
-                                           Status = s.Status,
-                                           ScheduleMaintenanceItem = smi
-                                           
-                                       }).FirstOrDefaultAsync();
+            var result = await scheduleService.StatusAccomplished(updateStatus);
 
-            if (schedule == null)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            schedule.Status = Status.Accomplished;
+            result.Status = Status.Accomplished;
 
-            _context.Entry(schedule).State = EntityState.Modified;
+            _context.Entry(result).State = EntityState.Modified;
 
             try
             {

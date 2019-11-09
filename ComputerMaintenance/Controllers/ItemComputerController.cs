@@ -9,6 +9,7 @@ using ComputerMaintenance.Context;
 using ComputerMaintenance.Models;
 using ComputerMaintenance.Models.ViewModels;
 using static ComputerMaintenance.Models.Enum.EnumStatus;
+using ComputerMaintenance.Services;
 
 namespace ComputerMaintenance.Controllers
 {
@@ -17,10 +18,12 @@ namespace ComputerMaintenance.Controllers
     public class ItemComputerController : ControllerBase
     {
         private readonly AppContextModel _context;
+        private ItemComputerService itemComputerService;
 
         public ItemComputerController(AppContextModel context)
         {
             _context = context;
+            itemComputerService = new ItemComputerService(_context);
         }
 
         //// GET: api/ItemComputer
@@ -48,35 +51,14 @@ namespace ComputerMaintenance.Controllers
         [HttpGet("{computerId}")]
         public async Task<ActionResult<ItemComputerViewModel>> GetItemComputers(Guid computerId)
         {
-            List<ItemComputer> itemComputers = await _context.ItemComputers
-                                                        .Include(i => i.Item)
-                                                        .Include(c => c.Computer)
-                                                        .Where(ic => ic.ComputerId == computerId).ToListAsync();
+            var result = await itemComputerService.GetItemComputers(computerId);
 
-            if (itemComputers == null)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            var computer = await _context.Computers.FindAsync(computerId);
-
-            if (computer == null)
-            {
-                return NotFound();
-            }
-
-            var items = await _context.Items.Where(i =>
-                                        !_context.ItemComputers.Any(ic => ic.ComputerId == computerId && ic.ItemId == i.Id)
-                                     ).ToListAsync();
-
-            ItemComputerViewModel itemComputerViewModel = new ItemComputerViewModel()
-            {
-                Computer = computer,
-                Items = items,
-                ItemComputers = itemComputers
-            };
-
-            return itemComputerViewModel;
+            return result;
         }
 
         //// PUT: api/ItemComputer/5
@@ -113,59 +95,7 @@ namespace ComputerMaintenance.Controllers
         [HttpPost]
         public async Task<ActionResult<ItemComputer>> PostItemComputer(ItemComputer itemComputer)
         {
-            var registrationDate = DateTime.Now;
-            var dateYearsPeriod = registrationDate.AddYears(4).Year;
-            var idScheduleItemComputer = Guid.NewGuid();
-
-            ScheduleItemComputer scheduleItemComputer = new ScheduleItemComputer();
-            ScheduleMaintenanceItem scheduleMaintenanceItem;
-            List<ScheduleMaintenanceItem> scheduleMaintenanceItems = new List<ScheduleMaintenanceItem>();
-            Schedule schedule;
-            List<Schedule> schedules = new List<Schedule>();
-
-            var listMaintenanceItems = await _context.MaintenanceItems.Where(mi => mi.ItemId == itemComputer.ItemId).ToListAsync();
-
-            itemComputer.RegistrationDate = registrationDate;
-
-            scheduleItemComputer.Id = idScheduleItemComputer;
-            scheduleItemComputer.ComputerId = itemComputer.ComputerId;
-            scheduleItemComputer.ItemId = itemComputer.ItemId;
-
-            foreach (var maintenanceItem in listMaintenanceItems) {
-
-                scheduleMaintenanceItem = new ScheduleMaintenanceItem();
-
-                scheduleMaintenanceItem.Id = Guid.NewGuid();
-                scheduleMaintenanceItem.ScheduleItemComputerId = scheduleItemComputer.Id;
-                scheduleMaintenanceItem.MaintenanceId = maintenanceItem.MaintenanceId;
-
-                scheduleMaintenanceItems.Add(scheduleMaintenanceItem);
-            }
-
-            foreach (var scheduleMI in scheduleMaintenanceItems)
-            {
-                var dateAddMonth = registrationDate;
-
-                while (dateAddMonth.Year < dateYearsPeriod)
-                {
-                    schedule = new Schedule();
-
-                    schedule.Id = Guid.NewGuid();
-                    schedule.ScheduleMaintenanceItemId = scheduleMI.Id;
-                    schedule.Status = Status.Pending;
-
-                    dateAddMonth = dateAddMonth.AddMonths(listMaintenanceItems.Find(mi => mi.MaintenanceId == scheduleMI.MaintenanceId).Period);
-
-                    schedule.MaintenanceDate = dateAddMonth;
-
-                    schedules.Add(schedule);
-                }
-            }
-
-            _context.ItemComputers.Add(itemComputer);
-            _context.ScheduleItemComputers.Add(scheduleItemComputer);
-            _context.ScheduleMaintenanceItems.AddRange(scheduleMaintenanceItems);
-            _context.Schedules.AddRange(schedules);
+            await itemComputerService.PostItemComputer(itemComputer);
 
             try
             {
@@ -173,7 +103,7 @@ namespace ComputerMaintenance.Controllers
             }
             catch (DbUpdateException)
             {
-                if (ItemComputerExists(itemComputer.ComputerId))
+                if (itemComputerService.ItemComputerExists(itemComputer.ComputerId))
                 {
                     return Conflict();
                 }
@@ -201,10 +131,5 @@ namespace ComputerMaintenance.Controllers
 
         //    return itemComputer;
         //}
-
-        private bool ItemComputerExists(Guid id)
-        {
-            return _context.ItemComputers.Any(e => e.ComputerId == id);
-        }
     }
 }

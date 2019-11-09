@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ComputerMaintenance.Context;
 using ComputerMaintenance.Models;
+using ComputerMaintenance.Services;
 
 namespace ComputerMaintenance.Controllers
 {
@@ -15,48 +16,48 @@ namespace ComputerMaintenance.Controllers
     public class ItemController : ControllerBase
     {
         private readonly AppContextModel _context;
+        private ItemService itemService;
 
         public ItemController(AppContextModel context)
         {
             _context = context;
+            itemService = new ItemService(_context);
         }
 
         // GET: api/Item
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Item>>> GetItems()
         {
-            return await _context.Items.ToListAsync();
+            var result = await itemService.GetItems();
+            return result;
         }
 
         // GET: api/Item/MaintenanceItem/id
         [HttpGet("MaintenanceItem/{id}")]
         public async Task<ActionResult<IEnumerable<MaintenanceItem>>> GetMaintenanceItems(Guid id)
         {
-            List<MaintenanceItem> maintenanceItems = await _context.MaintenanceItems
-                                                        .Include(m => m.Maintenance)
-                                                        .Include(i => i.Item)
-                                                        .Where(mi => mi.ItemId == id).ToListAsync();
+            var result = await itemService.GetMaintenanceItems(id);
 
-            if (maintenanceItems == null)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            return maintenanceItems;
+            return result;
         }
 
         // GET: api/Item/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Item>> GetItem(Guid id)
         {
-            var item = await _context.Items.FindAsync(id);
+            var result = await itemService.GetItem(id);
 
-            if (item == null)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            return item;
+            return result;
         }
 
         // PUT: api/Item/5
@@ -76,7 +77,7 @@ namespace ComputerMaintenance.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ItemExists(id))
+                if (!itemService.ItemExists(id))
                 {
                     return NotFound();
                 }
@@ -93,8 +94,7 @@ namespace ComputerMaintenance.Controllers
         [HttpPost]
         public async Task<ActionResult<Item>> PostItem(Item item)
         {
-            _context.Items.Add(item);
-            await _context.SaveChangesAsync();
+            await itemService.PostItem(item);
 
             return CreatedAtAction("GetItem", new { id = item.Id }, item);
         }
@@ -103,75 +103,28 @@ namespace ComputerMaintenance.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Item>> DeleteItem(Guid id)
         {
-            var item = await _context.Items.FindAsync(id);
-            if (item == null)
+            var result = await itemService.DeleteItem(id);
+
+            if (result == null)
             {
                 return NotFound();
             }
 
-            _context.Items.Remove(item);
-            await _context.SaveChangesAsync();
-
-            return item;
+            return result;
         }
 
         // DELETE: api/MaintenanceItem/5/6
         [HttpDelete("{itemId}/{maintenanceId}")]
         public async Task<ActionResult<MaintenanceItem>> DeleteMaintenanceItem(Guid itemId, Guid maintenanceId)
         {
-            var maintenanceItem = await _context.MaintenanceItems.FindAsync(itemId, maintenanceId);
+            var result = await itemService.DeleteMaintenanceItem(itemId, maintenanceId);
 
-            if (maintenanceItem == null)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            _context.MaintenanceItems.Remove(maintenanceItem);
-
-            var scheduleItemComputersId = await (from sic in _context.ScheduleItemComputers
-                                                 where sic.ItemId == itemId
-                                                 select new {
-                                                     sic.Id
-                                                 }).ToListAsync();
-
-            if (scheduleItemComputersId.Count() > 0)
-            {
-                List<ScheduleMaintenanceItem> scheduleMaintenanceItemsList = new List<ScheduleMaintenanceItem>();
-
-                foreach (var sicId in scheduleItemComputersId)
-                {
-                    var smiList = await _context.ScheduleMaintenanceItems.Where(smi => smi.ScheduleItemComputerId == sicId.Id 
-                                                                          && smi.MaintenanceId == maintenanceId).ToListAsync();
-                    scheduleMaintenanceItemsList.AddRange(smiList);
-                }
-
-                if (scheduleMaintenanceItemsList.Count > 0)
-                {
-                    List<Schedule> schedulesList = new List<Schedule>();
-
-                    foreach (var smiObj in scheduleMaintenanceItemsList)
-                    {
-                        var sList = await _context.Schedules.Where(s => s.ScheduleMaintenanceItemId == smiObj.Id).ToListAsync();
-
-                        schedulesList.AddRange(sList);
-                    }
-
-                    if (schedulesList.Count > 0) {
-                        _context.Schedules.RemoveRange(schedulesList);
-                    }
-
-                    _context.ScheduleMaintenanceItems.RemoveRange(scheduleMaintenanceItemsList);
-                }
-            }
-            
-            await _context.SaveChangesAsync();
-
-            return maintenanceItem;
-        }
-
-        private bool ItemExists(Guid id)
-        {
-            return _context.Items.Any(e => e.Id == id);
+            return result;
         }
     }
 }
