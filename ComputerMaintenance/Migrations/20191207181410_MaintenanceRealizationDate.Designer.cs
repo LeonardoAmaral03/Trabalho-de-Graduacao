@@ -4,14 +4,16 @@ using ComputerMaintenance.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ComputerMaintenance.Migrations
 {
     [DbContext(typeof(AppContextModel))]
-    partial class AppContextModelModelSnapshot : ModelSnapshot
+    [Migration("20191207181410_MaintenanceRealizationDate")]
+    partial class MaintenanceRealizationDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

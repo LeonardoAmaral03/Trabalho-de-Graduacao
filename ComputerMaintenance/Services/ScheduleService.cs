@@ -54,6 +54,8 @@ namespace ComputerMaintenance.Services
 
         public async Task<Schedule> StatusAccomplished(UpdateStatus updateStatus)
         {
+            DateTime realizationDate = DateTime.Now;
+
             Schedule schedule = await (from sic in _context.ScheduleItemComputers
                                        join smi in _context.ScheduleMaintenanceItems on sic.Id equals smi.ScheduleItemComputerId
                                        join s in _context.Schedules on smi.Id equals s.ScheduleMaintenanceItemId
@@ -67,8 +69,8 @@ namespace ComputerMaintenance.Services
                                            ScheduleMaintenanceItemId = s.ScheduleMaintenanceItemId,
                                            MaintenanceDate = s.MaintenanceDate,
                                            Status = s.Status,
-                                           ScheduleMaintenanceItem = smi
-
+                                           ScheduleMaintenanceItem = smi,
+                                           MaintenanceRealizationDate = realizationDate
                                        }).FirstOrDefaultAsync();
 
             return schedule;
